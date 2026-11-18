@@ -1,0 +1,50 @@
+{
+  "name": "aurora-launcher",
+  "version": "0.3.0",
+  "description": "비공식 Minecraft: Java Edition 런처",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "adm-zip": "^0.6.1",
+    "electron-updater": "^6.8.11",
+    "minecraft-launcher-core": "^3.18.2",
+    "msmc": "^5.0.5",
+    "skinview3d": "^3.4.2"
+  },
+  "devDependencies": {
+    "electron": "^45.3.4",
+    "electron-builder": "^26.18.0"
+  },
+  "build": {
+    "appId": "dev.aurora.launcher",
+    "productName": "Aurora Launcher",
+    "files": [
+      "src/**/*"
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "src/assets/icon.png",
+      "artifactName": "Aurora-Launcher-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "deleteAppDataOnUninstall": false
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "5pal1ori-a11y",
+        "repo": "aurora-launcher"
+      }
+    ]
+  }
+}
