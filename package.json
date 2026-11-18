@@ -43,7 +43,8 @@
       {
         "provider": "github",
         "owner": "5pal1ori-a11y",
-        "repo": "aurora-launcher"
+        "repo": "aurora-launcher",
+        "releaseType": "release"
       }
     ]
   }

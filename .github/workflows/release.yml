@@ -1,0 +1,25 @@
+name: Release
+
+# v로 시작하는 태그(예: v0.3.0)를 올리면 Windows에서 설치 파일을 빌드해
+# GitHub Release로 올립니다. 런처의 자동 업데이트는 이 Release를 확인합니다.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Build and publish
+        run: npx electron-builder --win --publish always
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
