@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#211a3d"/><stop offset="1" stop-color="#0c0b15"/></linearGradient>
+    <linearGradient id="top" x1="14" y1="22" x2="50" y2="22" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#3df5c1"/><stop offset=".55" stop-color="#8f7cff"/><stop offset="1" stop-color="#ff86d9"/></linearGradient>
+    <linearGradient id="left" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7a5cff"/><stop offset="1" stop-color="#4a31c9"/></linearGradient>
+    <linearGradient id="right" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4429b8"/><stop offset="1" stop-color="#2a1877"/></linearGradient>
+    <radialGradient id="glow" cx=".5" cy=".42" r=".5"><stop offset="0" stop-color="#8f7cff" stop-opacity=".55"/><stop offset="1" stop-color="#8f7cff" stop-opacity="0"/></radialGradient>
+    <clipPath id="tc"><path d="M32 11 50.5 21.5 32 32 13.5 21.5z"/></clipPath>
+  </defs>
+  <rect x="2" y="2" width="60" height="60" rx="15" fill="url(#bg)"/>
+  <circle cx="32" cy="30" r="26" fill="url(#glow)"/>
+  <path d="M13.5 21.5 32 32v21L13.5 42.500z" fill="url(#left)"/>
+  <path d="M32 32 50.5 21.500v21L32 53z" fill="url(#right)"/>
+  <path d="M32 11 50.5 21.500 32 32 13.5 21.500z" fill="url(#top)"/>
+  <g clip-path="url(#tc)" fill="none" stroke="#fff" stroke-linecap="round" opacity=".55">
+    <path d="M12 23c6-4 10 2 16-1s10-6 16-3 8 2 10 0" stroke-width="1.6"/>
+    <path d="M12 18c6-3 9 1 15-1s11-5 17-2" stroke-width="1" opacity=".6"/>
+  </g>
+  <path d="M13.5 21.500 32 11l18.5 10.5M32 32v21" fill="none" stroke="#fff" stroke-opacity=".28" stroke-width=".8"/>
+</svg>

@@ -798,9 +798,6 @@ $('news-next').onclick = () => $('news-row').scrollBy({ left: 250 });
 
 // ───────── 시작 ─────────
 (async function init() {
-  const block = Pixel.blockIcon('grass');
-  $('splash-icon').src = block;
-  $('rail-icon').src = block;
   const started = Date.now();
 
   state.settings = await api.getSettings();

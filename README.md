@@ -1,3 +1,5 @@
+<img src="docs/logo.svg" width="96" alt="">
+
 # Aurora Launcher
 
 Windows용 비공식 Minecraft: Java Edition 런처입니다.

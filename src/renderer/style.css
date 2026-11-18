@@ -39,8 +39,8 @@ h4 { margin: 26px 0 8px; font-size: 11px; font-weight: 700; letter-spacing: 0.08
 /* ── 시작 화면 ── */
 .splash { position: fixed; inset: 0; z-index: 50; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px; background: var(--bg); transition: opacity 0.5s var(--ease), visibility 0.5s; }
 body:not(.booting) .splash { opacity: 0; visibility: hidden; }
-.splash-mark { width: 76px; height: 76px; padding: 14px; border-radius: 20px; background: var(--panel-2); box-shadow: 0 0 0 1px var(--line-2), 0 20px 60px rgba(123, 97, 255, 0.35); animation: pop 0.7s var(--ease) both, bob 2.4s ease-in-out 0.7s infinite; }
-.splash-mark img { width: 100%; height: 100%; image-rendering: pixelated; }
+.splash-mark { width: 96px; height: 96px; filter: drop-shadow(0 18px 40px rgba(123, 97, 255, 0.45)); animation: pop 0.7s var(--ease) both, bob 2.4s ease-in-out 0.7s infinite; }
+.splash-mark img { width: 100%; height: 100%; display: block; }
 .splash-word { font: 800 15px var(--display); letter-spacing: 0.5em; padding-left: 0.5em; animation: rise 0.7s var(--ease) 0.15s both; }
 .splash-bar { width: 120px; height: 3px; border-radius: 3px; background: var(--panel-3); overflow: hidden; animation: rise 0.7s var(--ease) 0.25s both; }
 .splash-bar i { display: block; width: 40%; height: 100%; border-radius: 3px; background: var(--accent); animation: slide 1s ease-in-out infinite; }
@@ -53,8 +53,9 @@ body:not(.booting) .splash { opacity: 0; visibility: hidden; }
 
 /* ── 아이콘 메뉴 ── */
 .rail { width: 68px; flex: none; display: flex; flex-direction: column; align-items: center; padding: 12px 0; background: var(--bg-2); border-right: 1px solid var(--line); -webkit-app-region: drag; }
-.rail-logo { width: 38px; height: 38px; padding: 7px; border-radius: 11px; background: var(--panel-2); margin-bottom: 18px; box-shadow: inset 0 0 0 1px var(--line-2); }
-.rail-logo img { width: 100%; height: 100%; image-rendering: pixelated; display: block; }
+.rail-logo { width: 42px; height: 42px; margin-bottom: 16px; transition: transform 0.4s var(--ease), filter 0.3s; }
+.rail-logo:hover { transform: rotate(-8deg) scale(1.06); filter: drop-shadow(0 6px 16px rgba(123, 97, 255, 0.5)); }
+.rail-logo img { width: 100%; height: 100%; display: block; }
 .rail-items { position: relative; display: flex; flex-direction: column; gap: 6px; -webkit-app-region: no-drag; }
 .rail-ind { position: absolute; left: -12px; top: 0; width: 4px; height: 22px; margin-top: 11px; border-radius: 0 4px 4px 0; background: var(--accent); box-shadow: 0 0 12px var(--accent); transition: transform 0.35s var(--ease); }
 .nav { width: 44px; height: 44px; display: grid; place-items: center; border-radius: 12px; color: var(--muted); transition: color 0.2s, background 0.2s, transform 0.2s var(--ease); -webkit-app-region: no-drag; }
