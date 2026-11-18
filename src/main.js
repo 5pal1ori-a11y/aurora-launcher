@@ -5,7 +5,8 @@ const { app, BrowserWindow, ipcMain, dialog, shell, safeStorage } = require('ele
 const path = require('path');
 const fs = require('fs');
 const os = require('os');
-const { ensureJava } = require('./java');
+const { ensureJava, javaMajorOf } = require('./java');
+const { verifyVersion, explainLog } = require('./repair');
 
 const MANIFEST_URL = 'https://piston-meta.mojang.com/mc/game/version_manifest_v2.json';
 const MC_API = 'https://api.minecraftservices.com/minecraft/profile';
@@ -356,11 +357,22 @@ ipcMain.handle('game:launch', async (_e, versionId) => {
 
     const meta = await (await fetch(version.url)).json();
     const javaMajor = (meta.javaVersion && meta.javaVersion.majorVersion) || 8;
-    const javaPath =
-      settings.javaPath ||
-      (await ensureJava(javaMajor, path.join(userDir(), 'runtime'), (text, pct) =>
+    let javaPath;
+    if (settings.javaPath) {
+      // 직접 지정한 Java 가 실행되는지, 이 버전에 맞는지 확인
+      const have = javaMajorOf(settings.javaPath);
+      if (have === null) {
+        throw new Error('설정에서 지정한 Java 가 실행되지 않습니다. 설정 → Java 에서 "초기화"를 누르면 자동으로 맞는 Java 를 사용합니다.');
+      }
+      if (have < javaMajor) {
+        throw new Error(`Minecraft ${version.id} 은(는) Java ${javaMajor} 이상이 필요한데, 설정한 Java 는 ${have} 입니다. 설정 → Java 에서 "초기화"를 눌러 주세요.`);
+      }
+      javaPath = settings.javaPath;
+    } else {
+      javaPath = await ensureJava(javaMajor, path.join(userDir(), 'runtime'), (text, pct) =>
         send('game:state', { state: 'preparing', text, pct })
-      ));
+      );
+    }
 
     // 토큰이 만료됐으면 갱신
     mcToken = await mcToken.refresh();
@@ -373,15 +385,21 @@ ipcMain.handle('game:launch', async (_e, versionId) => {
       custom = await prepareCosmetics(settings);
     }
 
+    // 잘리거나 손상된 게임 파일을 찾아 지우면, 아래 실행 단계에서 다시 받습니다.
+    const broken = verifyVersion(settings.gameDir, custom || version.id, (text) => send('game:state', { state: 'preparing', text }));
+
     const startedAt = Date.now();
     const logFile = path.join(userDir(), 'latest.log');
     const logStream = fs.createWriteStream(logFile);
     logStream.on('error', () => {}); // 로그 저장 실패는 무시 (게임 실행에는 영향 없음)
+    let tail = ''; // 실패 원인 분석용 최근 로그
     const log = (l) => {
       const line = String(l).replace(/\n?$/, '\n');
       logStream.write(line);
+      tail = (tail + line).slice(-60000);
       send('game:log', line);
     };
+    if (broken.length) log(`[Aurora] 손상된 파일 ${broken.length}개를 찾아 다시 받습니다.`);
 
     const { Client } = require('minecraft-launcher-core');
     const client = new Client();
@@ -393,7 +411,7 @@ ipcMain.handle('game:launch', async (_e, versionId) => {
       let hint = null;
       if (code) {
         const crash = findJvmCrash(settings.gameDir, startedAt);
-        hint = CRASH_HINTS[code] || `게임이 비정상 종료됐습니다 (코드 ${code}).`;
+        hint = explainLog(tail) || CRASH_HINTS[code] || `게임이 비정상 종료됐습니다 (코드 ${code}).`;
         if (crash && crash.frame) hint += `\n충돌 위치: ${crash.frame}`;
         log(`[Aurora] 종료 코드 ${code} (0x${(code >>> 0).toString(16).toUpperCase()})`);
         log(`[Aurora] ${hint}`);

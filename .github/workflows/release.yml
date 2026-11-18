@@ -22,7 +22,17 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - name: Build and publish
-        run: npx electron-builder --win --publish always
+      - name: Build
+        run: npx electron-builder --win --publish never
+      # 파일 3개를 한 번에 하나의 초안 Release 로 올립니다 (electron-builder 가 직접 올리면 초안이 둘로 갈라질 때가 있음)
+      - name: Upload draft release
+        shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VER="v$(node -p "require('./package.json').version")"
+          if gh release view "$VER" >/dev/null 2>&1; then
+            gh release upload "$VER" dist/*.exe dist/*.blockmap dist/latest.yml --clobber
+          else
+            gh release create "$VER" dist/*.exe dist/*.blockmap dist/latest.yml --draft --title "$VER" --target "$GITHUB_SHA" --notes ""
+          fi

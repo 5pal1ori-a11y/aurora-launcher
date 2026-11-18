@@ -1,6 +1,6 @@
 {
   "name": "aurora-launcher",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "비공식 Minecraft: Java Edition 런처",
   "main": "src/main.js",
   "scripts": {
