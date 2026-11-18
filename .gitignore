@@ -1,4 +1,4 @@
-node_modules/
+node_modules
 dist/
 cosmetics-mod/build/
 cosmetics-mod/.gradle/

@@ -13,6 +13,7 @@ contextBridge.exposeInMainWorld('api', {
   listVersions: invoke('versions:list'),
   listInstalled: invoke('versions:installed'),
   launch: invoke('game:launch'),
+  pingServer: invoke('server:ping'),
   getSettings: invoke('settings:get'),
   setSettings: invoke('settings:set'),
   pickJava: invoke('dialog:pickJava'),

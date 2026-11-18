@@ -7,207 +7,260 @@
   <title>Aurora Launcher</title>
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
-  <header class="titlebar">
-    <div class="tb-title"><img class="tb-icon" id="tb-icon" alt="">Aurora Launcher</div>
-    <div class="tb-right">
-      <button class="update-chip" id="update-pill" hidden></button>
-      <button id="btn-min" class="wbtn" aria-label="최소화"><svg viewBox="0 0 12 12"><path d="M2 6h8"/></svg></button>
-      <button id="btn-close" class="wbtn close" aria-label="닫기"><svg viewBox="0 0 12 12"><path d="M2.5 2.5l7 7m0-7l-7 7"/></svg></button>
-    </div>
-  </header>
-
-  <div class="app">
-    <!-- 사이드바 -->
-    <aside class="sidebar">
-      <nav class="menu">
-        <button class="nav active" data-page="home">
-          <svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>홈
-        </button>
-        <button class="nav" data-page="wardrobe">
-          <svg viewBox="0 0 24 24"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.57-3.47a2 2 0 0 0-1.33-2.23z"/></svg>옷장
-        </button>
-        <button class="nav" data-page="settings">
-          <svg viewBox="0 0 24 24"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>설정
-        </button>
-      </nav>
-
-      <div class="side-head">버전</div>
-      <div class="vlist" id="vlist"></div>
-
-      <div class="me" id="me">
-        <div class="head" id="acc-head"></div>
-        <div class="me-text">
-          <div class="me-name" id="acc-name">로그인 안 됨</div>
-          <div class="me-sub" id="acc-sub">Microsoft 계정</div>
-        </div>
-        <button class="me-btn" id="acc-action">로그인</button>
-      </div>
-    </aside>
-
-    <main>
-      <!-- 홈 -->
-      <section class="page active" id="page-home">
-        <div class="banner" id="banner">
-          <canvas id="scene"></canvas>
-          <canvas id="home-canvas"></canvas>
-          <div class="banner-info">
-            <div class="b-title" id="b-title">Minecraft</div>
-            <div class="b-meta" id="b-meta"></div>
-          </div>
-          <div class="split">
-            <button class="play" id="btn-play"><svg viewBox="0 0 24 24"><path d="M7 4.5v15l12-7.5z"/></svg><span id="play-label">플레이</span></button>
-            <label class="split-arrow" title="다른 버전 선택">
-              <svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
-              <select id="version" aria-label="버전"></select>
-            </label>
-          </div>
-        </div>
-
-        <div class="statusbar">
-          <div class="bar" id="bar"><div class="bar-fill" id="bar-fill"></div></div>
-          <div class="status-text" id="status-text">대기 중</div>
-          <button class="link" id="log-toggle">실행 로그</button>
-        </div>
-
-        <div class="home-body">
-          <div class="col-main">
-            <div class="sec-head"><h3>패치 노트</h3><span id="news-src">Minecraft: Java Edition</span></div>
-            <div class="news" id="news-row"><div class="empty">패치 노트를 불러오는 중…</div></div>
-          </div>
-          <div class="col-side">
-            <div class="box" id="loadout" hidden>
-              <div class="box-head"><h3>내 캐릭터</h3><button class="link" id="lo-open">옷장</button></div>
-              <dl class="kv">
-                <dt>스킨</dt><dd id="lo-skin">-</dd>
-                <dt>망토</dt><dd id="lo-cape">없음</dd>
-                <dt>치장품</dt><dd id="lo-cos">없음</dd>
-              </dl>
-            </div>
-            <div class="box">
-              <div class="box-head"><h3>바로가기</h3></div>
-              <button class="row-btn" id="sc-dir"><svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>게임 폴더 열기</button>
-              <button class="row-btn" id="sc-log"><svg viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9zM14 3v6h6M8 13h8M8 17h5"/></svg>마지막 실행 로그</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="logpanel" id="logpanel" hidden>
-          <div class="logpanel-head"><b>실행 로그</b><span><button class="btn" id="log-open">파일로 열기</button><button class="btn" id="log-close">닫기</button></span></div>
-          <pre id="log"></pre>
-        </div>
-      </section>
-
-      <!-- 옷장 -->
-      <section class="page" id="page-wardrobe">
-        <div class="locked" id="wardrobe-locked">
-          <h2>옷장</h2>
-          <p>로그인하면 계정의 스킨과 망토를 바꿀 수 있습니다.</p>
-          <button class="btn primary" id="wardrobe-login">Microsoft 계정으로 로그인</button>
-        </div>
-
-        <div class="wardrobe" id="wardrobe" hidden>
-          <div class="closet">
-            <div class="page-head">
-              <h2>옷장</h2>
-              <div class="tabs" id="tabs">
-                <button data-tab="capes" class="on">망토 <i id="cnt-capes"></i></button>
-                <button data-tab="cosmetics">치장품 <i id="cnt-cos"></i></button>
-                <button data-tab="skin">스킨</button>
-              </div>
-            </div>
-
-            <div class="tabpane on" id="tab-capes">
-              <div class="grid" id="capes"></div>
-            </div>
-
-            <div class="tabpane" id="tab-cosmetics">
-              <div class="notice" id="cos-notice">
-                <span id="cos-notice-title"></span>
-                <button class="link" id="cos-select">이 버전으로 바꾸기</button>
-              </div>
-              <div class="grid" id="cosmetics"></div>
-              <p class="foot">치장품은 내 화면에만 보입니다. 게임에서 F5 로 3인칭 시점을 켜면 확인할 수 있습니다.</p>
-            </div>
-
-            <div class="tabpane" id="tab-skin">
-              <div class="form">
-                <div class="frow">
-                  <div><b>모델</b><small>스킨 파일의 팔 두께에 맞춰 고르세요.</small></div>
-                  <div class="seg" id="variant-seg">
-                    <button data-variant="classic" class="on">클래식</button>
-                    <button data-variant="slim">슬림</button>
-                  </div>
-                </div>
-                <div class="frow">
-                  <div><b>스킨 파일</b><small>64×64 PNG. 올리면 바로 계정에 적용됩니다.</small></div>
-                  <button class="btn primary" id="btn-skin">파일 선택…</button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="preview">
-            <canvas id="skin-canvas"></canvas>
-            <div class="preview-top"><span id="stage-name"></span></div>
-            <div class="seg small" id="anim-seg">
-              <button data-anim="idle" class="on">정지</button>
-              <button data-anim="walk">걷기</button>
-              <button data-anim="run">달리기</button>
-              <button data-anim="fly">비행</button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- 설정 -->
-      <section class="page" id="page-settings">
-        <div class="settings">
-          <h2>설정</h2>
-
-          <h4>게임</h4>
-          <div class="form">
-            <div class="frow">
-              <div><b>최대 메모리</b><small>너무 높게 잡으면 오히려 느려질 수 있습니다. 보통 4–6 GB면 충분합니다.</small></div>
-              <div class="ram"><input type="range" id="ram" min="1" max="16" step="1"><output id="ram-out"></output></div>
-            </div>
-            <div class="frow">
-              <div><b>Java</b><small>비워 두면 버전에 맞는 Java를 자동으로 받습니다.</small></div>
-              <div class="pathrow"><input type="text" id="java-path" placeholder="자동" readonly><button class="btn" id="pick-java">찾아보기</button><button class="btn" id="clear-java">초기화</button></div>
-            </div>
-            <div class="frow">
-              <div><b>게임 폴더</b><small>월드, 리소스 팩, 게임 파일이 저장됩니다.</small><small id="disk-free"></small></div>
-              <div class="pathrow"><input type="text" id="game-dir" readonly><button class="btn" id="pick-dir">변경</button><button class="btn" id="open-dir">열기</button></div>
-            </div>
-          </div>
-
-          <h4>런처</h4>
-          <div class="form">
-            <label class="frow">
-              <div><b>스냅샷 표시</b><small>개발 중인 버전을 목록에 포함합니다.</small></div>
-              <input type="checkbox" class="switch" id="snapshots">
-            </label>
-            <label class="frow">
-              <div><b>게임 실행 중 런처 숨기기</b><small>게임을 끄면 다시 나타납니다.</small></div>
-              <input type="checkbox" class="switch" id="close-on-launch">
-            </label>
-          </div>
-
-          <h4>정보</h4>
-          <div class="form">
-            <div class="frow">
-              <div><b>Aurora Launcher</b><small id="update-text">버전 확인 중…</small></div>
-              <button class="btn" id="update-check">업데이트 확인</button>
-            </div>
-          </div>
-
-          <p class="legal">비공식 런처입니다. Mojang Studios, Microsoft와 관련이 없습니다. Minecraft는 Mojang Synergies AB의 상표입니다.</p>
-        </div>
-      </section>
-    </main>
+<body class="booting">
+  <!-- 시작 화면 -->
+  <div class="splash" id="splash">
+    <div class="splash-mark"><img id="splash-icon" alt=""></div>
+    <div class="splash-word">AURORA</div>
+    <div class="splash-bar"><i></i></div>
   </div>
 
-  <div class="toast" id="toast" role="status"></div>
+  <div class="app">
+    <!-- 아이콘 메뉴 -->
+    <nav class="rail">
+      <div class="rail-logo"><img id="rail-icon" alt=""></div>
+      <div class="rail-items">
+        <span class="rail-ind" id="rail-ind"></span>
+        <button class="nav active" data-page="home" data-tip="홈">
+          <svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>
+        </button>
+        <button class="nav" data-page="wardrobe" data-tip="옷장">
+          <svg viewBox="0 0 24 24"><path d="M20.38 3.46 16 2a4 4 0 0 1-8 0L3.62 3.46a2 2 0 0 0-1.340 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.57-3.47a2 2 0 0 0-1.33-2.23z"/></svg>
+        </button>
+        <button class="nav" data-page="servers" data-tip="서버">
+          <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="7" rx="2"/><rect x="3" y="13" width="18" height="7" rx="2"/><path d="M7 7.5h.01M7 16.5h.01"/></svg>
+        </button>
+        <button class="nav" data-page="settings" data-tip="설정">
+          <svg viewBox="0 0 24 24"><path d="M12.220 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </div>
+      <div class="rail-bottom">
+        <button class="nav small" id="sc-dir" data-tip="게임 폴더">
+          <svg viewBox="0 0 24 24"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+        </button>
+        <button class="nav small" id="log-toggle" data-tip="실행 로그">
+          <svg viewBox="0 0 24 24"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9zM14 3v6h6M8 13h8M8 17h5"/></svg>
+        </button>
+      </div>
+    </nav>
+
+    <div class="main">
+      <!-- 상단 바 -->
+      <header class="topbar">
+        <div class="greet">
+          <div class="greet-title" id="greet-title">Aurora</div>
+          <div class="greet-sub" id="greet-sub">Minecraft: Java Edition 런처</div>
+        </div>
+        <div class="top-right">
+          <button class="update-chip" id="update-pill" hidden></button>
+          <div class="chip" id="ram-chip" title="게임에 할당된 메모리"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="10" rx="1.5"/><path d="M7 7V5M11 7V5M15 7V5M19 17v2M5 17v2"/></svg><span id="ram-chip-text"></span></div>
+          <div class="account" id="account">
+            <div class="head" id="acc-head"></div>
+            <div class="acc-text">
+              <div class="acc-name" id="acc-name">로그인 필요</div>
+              <div class="acc-sub"><i class="dot" id="acc-dot"></i><span id="acc-sub">오프라인</span></div>
+            </div>
+            <button class="acc-btn" id="acc-action">로그인</button>
+          </div>
+          <div class="wbtns">
+            <button id="btn-min" class="wbtn" aria-label="최소화"><svg viewBox="0 0 12 12"><path d="M2 6h8"/></svg></button>
+            <button id="btn-close" class="wbtn close" aria-label="닫기"><svg viewBox="0 0 12 12"><path d="M2.5 2.5l7 7m0-7l-7 7"/></svg></button>
+          </div>
+        </div>
+      </header>
+
+      <main class="pages">
+        <!-- 홈 -->
+        <section class="page active" id="page-home">
+          <div class="hero" id="banner">
+            <canvas id="scene"></canvas>
+            <div class="hero-shade"></div>
+            <canvas id="home-canvas"></canvas>
+
+            <div class="launch-area">
+              <div class="launch-kicker">MINECRAFT: JAVA EDITION</div>
+              <button class="launch" id="btn-play">
+                <span class="launch-fill" id="bar-fill"></span>
+                <span class="launch-shine"></span>
+                <span class="launch-text"><b id="play-label">플레이</b><small id="play-sub"></small></span>
+              </button>
+              <div class="ver-wrap">
+                <button class="ver-pill" id="ver-pill">
+                  <img id="ver-icon" alt="">
+                  <span id="ver-name">버전 불러오는 중…</span>
+                  <svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+                </button>
+                <div class="ver-menu" id="ver-menu" hidden>
+                  <div class="ver-tabs" id="ver-tabs">
+                    <button data-f="release" class="on">릴리스</button>
+                    <button data-f="snapshot">스냅샷</button>
+                    <button data-f="installed">설치됨</button>
+                  </div>
+                  <input class="ver-search" id="ver-search" placeholder="버전 검색 (예: 1.20)">
+                  <div class="ver-list" id="ver-list"></div>
+                </div>
+              </div>
+              <div class="status-text" id="status-text">대기 중</div>
+            </div>
+          </div>
+
+          <div class="below">
+            <div class="news-col">
+              <div class="sec-head">
+                <h3>새 소식</h3>
+                <div class="arrows"><button id="news-prev" aria-label="이전"><svg viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></svg></button><button id="news-next" aria-label="다음"><svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></button></div>
+              </div>
+              <div class="news" id="news-row">
+                <div class="ncard skeleton"></div><div class="ncard skeleton"></div><div class="ncard skeleton"></div>
+              </div>
+            </div>
+            <div class="srv-col">
+              <div class="sec-head"><h3>서버</h3><button class="link" id="srv-more">전체 보기</button></div>
+              <div class="srv-list compact" id="srv-quick"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 옷장 -->
+        <section class="page" id="page-wardrobe">
+          <div class="locked" id="wardrobe-locked">
+            <h2>옷장</h2>
+            <p>로그인하면 계정의 스킨과 망토를 바꿀 수 있습니다.</p>
+            <button class="btn primary" id="wardrobe-login">Microsoft 계정으로 로그인</button>
+          </div>
+
+          <div class="wardrobe" id="wardrobe" hidden>
+            <div class="preview">
+              <div class="preview-glow"></div>
+              <canvas id="skin-canvas"></canvas>
+              <div class="preview-top"><span id="stage-name"></span></div>
+              <div class="seg small" id="anim-seg">
+                <button data-anim="idle" class="on">정지</button>
+                <button data-anim="walk">걷기</button>
+                <button data-anim="run">달리기</button>
+                <button data-anim="fly">비행</button>
+              </div>
+            </div>
+
+            <div class="closet">
+              <div class="page-head">
+                <h2>옷장</h2>
+                <div class="tabs" id="tabs">
+                  <span class="tab-ind" id="tab-ind"></span>
+                  <button data-tab="capes" class="on">망토 <i id="cnt-capes"></i></button>
+                  <button data-tab="cosmetics">치장품 <i id="cnt-cos"></i></button>
+                  <button data-tab="skin">스킨</button>
+                </div>
+              </div>
+
+              <div class="tabpane on" id="tab-capes"><div class="grid" id="capes"></div></div>
+
+              <div class="tabpane" id="tab-cosmetics">
+                <div class="notice" id="cos-notice">
+                  <span id="cos-notice-title"></span>
+                  <button class="link" id="cos-select"></button>
+                </div>
+                <div class="grid" id="cosmetics"></div>
+                <p class="foot">치장품은 내 화면에만 보입니다. 게임에서 F5 로 3인칭 시점을 켜면 확인할 수 있습니다.</p>
+              </div>
+
+              <div class="tabpane" id="tab-skin">
+                <div class="form">
+                  <div class="frow">
+                    <div><b>모델</b><small>스킨 파일의 팔 두께에 맞춰 고르세요.</small></div>
+                    <div class="seg" id="variant-seg">
+                      <button data-variant="classic" class="on">클래식</button>
+                      <button data-variant="slim">슬림</button>
+                    </div>
+                  </div>
+                  <div class="frow">
+                    <div><b>스킨 파일</b><small>64×64 PNG. 올리면 바로 계정에 적용됩니다.</small></div>
+                    <button class="btn primary" id="btn-skin">파일 선택…</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 서버 -->
+        <section class="page" id="page-servers">
+          <div class="page-pad">
+            <div class="page-head plain">
+              <h2>서버</h2>
+              <button class="btn primary" id="srv-add-btn"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>서버 추가</button>
+            </div>
+            <form class="srv-form" id="srv-form" hidden>
+              <input id="srv-name" placeholder="이름 (예: 친구 서버)" maxlength="40">
+              <input id="srv-addr" placeholder="주소 (예: play.example.com 또는 1.2.3.4:25565)" required>
+              <button class="btn primary" type="submit">추가</button>
+              <button class="btn" type="button" id="srv-cancel">취소</button>
+            </form>
+            <p class="hint">접속을 누르면 선택한 버전으로 게임을 켜고 바로 그 서버에 들어갑니다. 서버마다 지원하는 버전이 다를 수 있습니다.</p>
+            <div class="srv-list" id="srv-list"></div>
+          </div>
+        </section>
+
+        <!-- 설정 -->
+        <section class="page" id="page-settings">
+          <div class="page-pad settings">
+            <h2>설정</h2>
+
+            <h4>게임</h4>
+            <div class="form">
+              <div class="frow">
+                <div><b>최대 메모리</b><small>너무 높게 잡으면 오히려 느려질 수 있습니다. 보통 4–6 GB면 충분합니다.</small></div>
+                <div class="ram"><input type="range" id="ram" min="1" max="16" step="1"><output id="ram-out"></output></div>
+              </div>
+              <div class="frow">
+                <div><b>Java</b><small>비워 두면 버전에 맞는 Java를 자동으로 받습니다.</small></div>
+                <div class="pathrow"><input type="text" id="java-path" placeholder="자동" readonly><button class="btn" id="pick-java">찾아보기</button><button class="btn" id="clear-java">초기화</button></div>
+              </div>
+              <div class="frow">
+                <div><b>게임 폴더</b><small>월드, 리소스 팩, 게임 파일이 저장됩니다.</small><small id="disk-free"></small></div>
+                <div class="pathrow"><input type="text" id="game-dir" readonly><button class="btn" id="pick-dir">변경</button><button class="btn" id="open-dir">열기</button></div>
+              </div>
+            </div>
+
+            <h4>런처</h4>
+            <div class="form">
+              <label class="frow">
+                <div><b>스냅샷 표시</b><small>개발 중인 버전을 목록에 포함합니다.</small></div>
+                <input type="checkbox" class="switch" id="snapshots">
+              </label>
+              <label class="frow">
+                <div><b>게임 실행 중 런처 숨기기</b><small>게임을 끄면 다시 나타납니다.</small></div>
+                <input type="checkbox" class="switch" id="close-on-launch">
+              </label>
+              <label class="frow">
+                <div><b>애니메이션 줄이기</b><small>움직이는 효과를 최소화합니다.</small></div>
+                <input type="checkbox" class="switch" id="reduce-motion">
+              </label>
+            </div>
+
+            <h4>정보</h4>
+            <div class="form">
+              <div class="frow">
+                <div><b>Aurora Launcher</b><small id="update-text">버전 확인 중…</small></div>
+                <button class="btn" id="update-check">업데이트 확인</button>
+              </div>
+            </div>
+
+            <p class="legal">비공식 런처입니다. Mojang Studios, Microsoft와 관련이 없습니다. Minecraft는 Mojang Synergies AB의 상표입니다.</p>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- 실행 로그 -->
+  <div class="drawer" id="logpanel" hidden>
+    <div class="drawer-head"><b>실행 로그</b><span><button class="btn" id="log-open">파일로 열기</button><button class="btn" id="log-close">닫기</button></span></div>
+    <pre id="log"></pre>
+  </div>
+
+  <div class="tip" id="tip"></div>
+  <div class="toasts" id="toasts"></div>
 
   <script src="vendor/skinview3d.bundle.js"></script>
   <script src="pixel.js"></script>

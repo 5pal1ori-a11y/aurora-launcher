@@ -7,6 +7,7 @@ const fs = require('fs');
 const os = require('os');
 const { ensureJava, javaMajorOf } = require('./java');
 const { verifyVersion, explainLog } = require('./repair');
+const { ping } = require('./ping');
 
 const MANIFEST_URL = 'https://piston-meta.mojang.com/mc/game/version_manifest_v2.json';
 const MC_API = 'https://api.minecraftservices.com/minecraft/profile';
@@ -16,6 +17,7 @@ const FABRIC_META = 'https://meta.fabricmc.net/v2/versions/loader';
 // 치장품 모드(Fabric)가 지원하는 게임 버전과 치장품 목록
 const COSMETICS_VERSION = '1.21.1';
 const COSMETIC_IDS = ['tophat', 'crown', 'halo', 'wings'];
+const SERVER_RE = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*(:\d{1,5})?$/i;
 const MOD_JAR = path.join(__dirname, 'assets', 'aurora-cosmetics.jar');
 
 let win = null;
@@ -39,6 +41,8 @@ function defaultSettings() {
     closeOnLaunch: false,
     cosmetics: [],
     history: {}, // 버전별 마지막 플레이 시각 (ms)
+    servers: [], // { name, address }
+    reduceMotion: false,
   };
 }
 
@@ -55,6 +59,7 @@ function saveSettings(patch) {
   const next = loadSettings();
   for (const k of allowed) if (patch && k in patch) next[k] = patch[k];
   next.ram = Math.max(1, Math.min(64, Number(next.ram) || 4));
+  next.reduceMotion = !!next.reduceMotion;
   const hist = next.history && typeof next.history === 'object' ? next.history : {};
   next.history = Object.fromEntries(
     Object.entries(hist)
@@ -62,6 +67,10 @@ function saveSettings(patch) {
       .sort((a, b) => b[1] - a[1])
       .slice(0, 30)
   );
+  next.servers = (Array.isArray(next.servers) ? next.servers : [])
+    .filter((s) => s && typeof s.address === 'string' && SERVER_RE.test(s.address.trim()))
+    .slice(0, 20)
+    .map((s) => ({ name: String(s.name || s.address).trim().slice(0, 40), address: s.address.trim().toLowerCase() }));
   next.cosmetics = Array.isArray(next.cosmetics) ? COSMETIC_IDS.filter((id) => next.cosmetics.includes(id)) : [];
   if (next.cosmetics.includes('tophat') && next.cosmetics.includes('crown')) {
     next.cosmetics = next.cosmetics.filter((id) => id !== 'crown'); // 머리에는 하나만
@@ -339,7 +348,17 @@ let gameProcessStarted = false;
 // ───────────── 게임 실행 ─────────────
 const send = (ch, data) => win && !win.isDestroyed() && win.webContents.send(ch, data);
 
-ipcMain.handle('game:launch', async (_e, versionId) => {
+ipcMain.handle('server:ping', async (_e, address) => {
+  if (typeof address !== 'string' || !SERVER_RE.test(address)) return { online: false };
+  try {
+    return await ping(address);
+  } catch {
+    return { online: false };
+  }
+});
+
+ipcMain.handle('game:launch', async (_e, versionId, server) => {
+  if (server != null && (typeof server !== 'string' || !SERVER_RE.test(server))) throw new Error('서버 주소가 올바르지 않습니다.');
   if (gameRunning) throw new Error('게임이 이미 실행 중입니다.');
   if (!mcToken) throw new Error('먼저 로그인해 주세요.');
   const manifest = await getManifest();
@@ -442,6 +461,8 @@ ipcMain.handle('game:launch', async (_e, versionId) => {
         '-XX:G1HeapRegionSize=32M',
       ],
       overrides: { detached: false },
+      // 서버 목록에서 '접속'을 눌렀으면 게임이 켜지자마자 그 서버로 들어갑니다.
+      ...(server ? { quickPlay: { type: 'multiplayer', identifier: server } } : {}),
     });
     if (!proc) throw new Error('게임을 시작하지 못했습니다. 로그를 확인해 주세요.');
     gameProcessStarted = true;
@@ -521,10 +542,10 @@ ipcMain.on('win:close', () => win && win.close());
 
 function createWindow() {
   win = new BrowserWindow({
-    width: 1120,
-    height: 700,
-    minWidth: 960,
-    minHeight: 620,
+    width: 1200,
+    height: 740,
+    minWidth: 1040,
+    minHeight: 660,
     frame: false,
     backgroundColor: '#0b0c0f',
     icon: path.join(__dirname, 'assets', 'icon.png'),
