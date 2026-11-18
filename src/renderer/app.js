@@ -234,6 +234,12 @@ api.onState((s) => {
   }
 });
 
+api.onAppError((msg) => {
+  toast(msg, true);
+  setStatus(msg, 0);
+  $('status-text').classList.add('err');
+});
+
 api.onLog((line) => {
   const log = $('log');
   const stick = log.scrollTop + log.clientHeight >= log.scrollHeight - 20;
@@ -557,6 +563,9 @@ function renderSettings() {
   $('ram-out').textContent = `${s.ram} GB`;
   $('java-path').value = s.javaPath;
   $('game-dir').value = s.gameDir;
+  $('disk-free').textContent =
+    s.freeGb === null || s.freeGb === undefined ? '' : `${s.drive} 드라이브 남은 공간 ${s.freeGb} GB` + (s.freeGb < 2 ? ' · 부족합니다' : '');
+  $('disk-free').classList.toggle('warn', s.freeGb !== null && s.freeGb < 2);
   $('snapshots').checked = s.showSnapshots;
   $('close-on-launch').checked = s.closeOnLaunch;
 }

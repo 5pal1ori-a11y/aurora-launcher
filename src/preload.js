@@ -30,4 +30,5 @@ contextBridge.exposeInMainWorld('api', {
   onProgress: on('game:progress'),
   onLog: on('game:log'),
   onState: on('game:state'),
+  onAppError: on('app:error'),
 });

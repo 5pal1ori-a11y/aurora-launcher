@@ -164,6 +164,7 @@ main { flex: 1; min-width: 0; position: relative; }
 .frow > div:first-child { flex: 1; min-width: 0; }
 .frow b { display: block; font-weight: 500; }
 .frow small { display: block; color: var(--muted); font-size: 12px; }
+.frow small.warn { color: #ff8a8d; }
 
 /* ── 옷장 ── */
 .locked { margin: auto; text-align: center; }

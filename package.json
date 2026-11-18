@@ -1,6 +1,6 @@
 {
   "name": "aurora-launcher",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "비공식 Minecraft: Java Edition 런처",
   "main": "src/main.js",
   "scripts": {
@@ -44,7 +44,7 @@
         "provider": "github",
         "owner": "5pal1ori-a11y",
         "repo": "aurora-launcher",
-        "releaseType": "release"
+        "releaseType": "draft"
       }
     ]
   }

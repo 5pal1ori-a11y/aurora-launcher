@@ -298,6 +298,43 @@ function findJvmCrash(gameDir, since) {
   }
 }
 
+// ───────────── 저장 공간 ─────────────
+// 폴더가 있는 드라이브의 남은 공간(바이트). 폴더가 아직 없으면 있는 상위 폴더로 확인합니다.
+function freeBytes(dir) {
+  let p = path.resolve(dir);
+  while (!fs.existsSync(p) && path.dirname(p) !== p) p = path.dirname(p);
+  try {
+    const s = fs.statfsSync(p);
+    return s.bavail * s.bsize;
+  } catch {
+    return null;
+  }
+}
+const gb = (b) => (b / 1024 ** 3).toFixed(1);
+const driveOf = (dir) => (process.platform === 'win32' ? path.parse(path.resolve(dir)).root.replace(/\\$/, '') : path.parse(path.resolve(dir)).root);
+const MIN_FREE = 2 * 1024 ** 3; // 새 버전 + Java 를 받으려면 대략 이 정도 필요
+
+function diskFullMessage(dir) {
+  const free = freeBytes(dir);
+  return (
+    `저장 공간이 부족합니다 (${driveOf(dir)} 드라이브` +
+    (free !== null ? `, 남은 공간 ${gb(free)} GB` : '') +
+    `). 공간을 비우거나 설정에서 게임 폴더를 다른 드라이브로 옮겨 주세요.`
+  );
+}
+
+// 처리하지 못한 오류가 나도 영어 오류 창으로 멈추지 않고 런처 화면에 알려 줍니다.
+process.on('uncaughtException', (err) => {
+  const msg = err && err.code === 'ENOSPC' ? diskFullMessage(loadSettings().gameDir) : `예상하지 못한 오류: ${(err && err.message) || err}`;
+  console.error(err);
+  if (gameRunning && !gameProcessStarted) gameRunning = false;
+  send('game:state', { state: 'idle' });
+  send('app:error', msg);
+});
+process.on('unhandledRejection', (err) => console.error(err));
+
+let gameProcessStarted = false;
+
 // ───────────── 게임 실행 ─────────────
 const send = (ch, data) => win && !win.isDestroyed() && win.webContents.send(ch, data);
 
@@ -308,7 +345,11 @@ ipcMain.handle('game:launch', async (_e, versionId) => {
   const version = manifest.versions.find((v) => v.id === versionId);
   if (!version) throw new Error('알 수 없는 버전입니다.');
 
+  const free = freeBytes(loadSettings().gameDir);
+  if (free !== null && free < MIN_FREE) throw new Error(diskFullMessage(loadSettings().gameDir));
+
   gameRunning = true;
+  gameProcessStarted = false;
   try {
     const settings = saveSettings({ lastVersion: versionId, history: { ...loadSettings().history, [versionId]: Date.now() } });
     send('game:state', { state: 'preparing', text: 'Java 확인 중…' });
@@ -335,6 +376,7 @@ ipcMain.handle('game:launch', async (_e, versionId) => {
     const startedAt = Date.now();
     const logFile = path.join(userDir(), 'latest.log');
     const logStream = fs.createWriteStream(logFile);
+    logStream.on('error', () => {}); // 로그 저장 실패는 무시 (게임 실행에는 영향 없음)
     const log = (l) => {
       const line = String(l).replace(/\n?$/, '\n');
       logStream.write(line);
@@ -384,18 +426,24 @@ ipcMain.handle('game:launch', async (_e, versionId) => {
       overrides: { detached: false },
     });
     if (!proc) throw new Error('게임을 시작하지 못했습니다. 로그를 확인해 주세요.');
+    gameProcessStarted = true;
     send('game:state', { state: 'running' });
     if (settings.closeOnLaunch && win) win.hide();
     return true;
   } catch (err) {
     gameRunning = false;
+    if (err && err.code === 'ENOSPC') err = new Error(diskFullMessage(loadSettings().gameDir));
     send('game:state', { state: 'idle' });
     throw err;
   }
 });
 
 // ───────────── 설정 / 창 ─────────────
-ipcMain.handle('settings:get', () => ({ ...loadSettings(), totalRam: Math.floor(os.totalmem() / 1024 ** 3) }));
+ipcMain.handle('settings:get', () => {
+  const s = loadSettings();
+  const free = freeBytes(s.gameDir);
+  return { ...s, totalRam: Math.floor(os.totalmem() / 1024 ** 3), freeGb: free === null ? null : Number(gb(free)), drive: driveOf(s.gameDir) };
+});
 ipcMain.handle('settings:set', (_e, patch) => {
   const saved = saveSettings(patch);
   if (patch && 'cosmetics' in patch) writeCosmeticsConfig(saved); // 게임 실행 중에도 바로 반영
