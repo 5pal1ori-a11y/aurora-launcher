@@ -1,0 +1,17 @@
+// Minecraft 26.1 부터는 난독화가 없어서 매핑 없이 빌드합니다 (Gradle 9.8+, Java 25 필요).
+plugins { id 'net.fabricmc.fabric-loom' version '1.19.4' }
+base { archivesName = 'aurora-cosmetics-v26' }
+version = '1.0.0'
+repositories { maven { url = 'https://libraries.minecraft.net/' } }
+sourceSets.main.java.srcDirs += '../../common/src/main/java'
+sourceSets.main.resources.srcDirs += '../../common/src/main/resources'
+dependencies {
+  minecraft "com.mojang:minecraft:${project.minecraft_version}"
+  implementation "net.fabricmc:fabric-loader:${project.loader_version}"
+}
+processResources {
+  inputs.property 'range', project.mc_range
+  filesMatching('fabric.mod.json') { expand 'mc_range': project.mc_range, 'java': project.java_version }
+}
+java { toolchain { languageVersion = JavaLanguageVersion.of(25) } }
+tasks.withType(JavaCompile).configureEach { it.options.release = 17; it.options.encoding = 'UTF-8' } // 믹스인 호환 수준(JAVA_17)과 맞춤

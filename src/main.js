@@ -15,10 +15,49 @@ const NEWS_URL = 'https://launchercontent.mojang.com/v2/javaPatchNotes.json';
 const FABRIC_META = 'https://meta.fabricmc.net/v2/versions/loader';
 
 // 치장품 모드(Fabric)가 지원하는 게임 버전과 치장품 목록
-const COSMETICS_VERSION = '1.21.1';
-const COSMETIC_IDS = ['tophat', 'crown', 'halo', 'wings'];
+// 치장품 모드는 Minecraft 버전 묶음마다 따로 빌드됩니다 (assets/cosmetics-mods/index.json).
+const MOD_DIR = path.join(__dirname, 'assets', 'cosmetics-mods');
+const MOD_INDEX = (() => {
+  try {
+    return JSON.parse(fs.readFileSync(path.join(MOD_DIR, 'index.json'), 'utf8'));
+  } catch {
+    return [];
+  }
+})();
+// 치장품 목록은 런처 미리보기와 같은 데이터 파일에서 읽습니다.
+const COSMETIC_IDS = (() => {
+  try {
+    const t = fs.readFileSync(path.join(__dirname, 'renderer', 'cosmetics', 'cosmetics.data.js'), 'utf8');
+    return JSON.parse(t.slice(t.indexOf('{'), t.lastIndexOf('}') + 1)).items.map((i) => i.id);
+  } catch {
+    return [];
+  }
+})();
 const SERVER_RE = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*(:\d{1,5})?$/i;
-const MOD_JAR = path.join(__dirname, 'assets', 'aurora-cosmetics.jar');
+
+// "1.21.4" → [1,21,4], "26.4-snapshot-10" → [26,4,0] (스냅샷), 그 외(25w02a, -pre, -rc)는 지원 안 함
+function parseVersion(id) {
+  const m = /^(\d+)\.(\d+)(?:\.(\d+))?(-snapshot-\d+)?$/.exec(id);
+  return m ? { v: [+m[1], +m[2], +(m[3] || 0)], snapshot: !!m[4] } : null;
+}
+function cmpVersion(a, b) {
+  for (let i = 0; i < 3; i++) if (a[i] !== b[i]) return a[i] - b[i];
+  return 0;
+}
+// 이 게임 버전에 맞는 치장품 모드 파일 (없으면 null)
+function cosmeticsModFor(versionId) {
+  const p = parseVersion(versionId);
+  if (!p) return null;
+  for (const e of MOD_INDEX) {
+    const min = parseVersion(e.min).v;
+    if (cmpVersion(p.v, min) < 0) continue;
+    if (e.max && cmpVersion(p.v, parseVersion(e.max).v) > 0) continue;
+    if (p.snapshot && !e.snapshots) continue;
+    const file = path.join(MOD_DIR, e.file);
+    return fs.existsSync(file) ? file : null;
+  }
+  return null;
+}
 
 let win = null;
 let mcToken = null; // msmc Minecraft 객체 (로그인 상태)
@@ -259,29 +298,43 @@ function writeCosmeticsConfig(settings) {
 }
 
 // Fabric 로더 프로필을 내려받고 모드 파일을 mods 폴더에 넣은 뒤, 실행할 커스텀 버전 이름을 돌려줍니다.
-async function prepareCosmetics(settings) {
-  const loaders = await (await fetch(`${FABRIC_META}/${COSMETICS_VERSION}`)).json();
+// Fabric 로더 프로필을 내려받고 이 버전용 치장품 모드를 mods 폴더에 넣은 뒤, 실행할 커스텀 버전 이름을 돌려줍니다.
+async function prepareCosmetics(settings, versionId, modJar) {
+  const loaders = await (await fetch(`${FABRIC_META}/${encodeURIComponent(versionId)}`)).json();
   const pick = loaders.find((l) => l.loader.stable) || loaders[0];
-  if (!pick) throw new Error('Fabric 로더 정보를 찾지 못했습니다.');
+  if (!pick) throw new Error(`Fabric 이 ${versionId} 을(를) 아직 지원하지 않습니다.`);
   const loader = pick.loader.version;
   if (!/^[\w.+-]+$/.test(loader)) throw new Error('Fabric 로더 버전이 올바르지 않습니다.');
 
-  const id = `fabric-loader-${loader}-${COSMETICS_VERSION}`;
+  const id = `fabric-loader-${loader}-${versionId}`;
   const dir = path.join(settings.gameDir, 'versions', id);
   const file = path.join(dir, `${id}.json`);
   if (!fs.existsSync(file)) {
-    const res = await fetch(`${FABRIC_META}/${COSMETICS_VERSION}/${loader}/profile/json`);
+    const res = await fetch(`${FABRIC_META}/${encodeURIComponent(versionId)}/${loader}/profile/json`);
     if (!res.ok) throw new Error('Fabric 프로필을 내려받지 못했습니다.');
     fs.mkdirSync(dir, { recursive: true });
     fs.writeFileSync(file, await res.text());
   }
   const mods = path.join(settings.gameDir, 'mods');
   fs.mkdirSync(mods, { recursive: true });
-  fs.writeFileSync(path.join(mods, 'aurora-cosmetics.jar'), fs.readFileSync(MOD_JAR));
+  // 다른 버전용으로 넣어 둔 치장품 모드는 지우고 이 버전용만 넣음
+  for (const f of fs.readdirSync(mods)) if (/^aurora-cosmetics.*\.jar$/i.test(f)) fs.rmSync(path.join(mods, f), { force: true });
+  fs.copyFileSync(modJar, path.join(mods, 'aurora-cosmetics.jar'));
   return id;
 }
 
-ipcMain.handle('cosmetics:info', () => ({ version: COSMETICS_VERSION, available: fs.existsSync(MOD_JAR) }));
+function removeCosmeticsMod(settings) {
+  const mods = path.join(settings.gameDir, 'mods');
+  try {
+    for (const f of fs.readdirSync(mods)) if (/^aurora-cosmetics.*\.jar$/i.test(f)) fs.rmSync(path.join(mods, f), { force: true });
+  } catch {}
+}
+
+// 치장품이 보이는 버전 목록 (런처 화면 안내용)
+ipcMain.handle('cosmetics:info', async () => {
+  const m = await getManifest().catch(() => null);
+  return { supported: m ? m.versions.filter((v) => cosmeticsModFor(v.id)).map((v) => v.id) : [] };
+});
 
 // ───────────── 충돌 진단 ─────────────
 const CRASH_HINTS = {
@@ -399,9 +452,12 @@ ipcMain.handle('game:launch', async (_e, versionId, server) => {
     // 치장품을 골랐고 지원 버전이면 Fabric + 치장품 모드로 실행
     writeCosmeticsConfig(settings);
     let custom;
-    if (version.id === COSMETICS_VERSION && settings.cosmetics.length && fs.existsSync(MOD_JAR)) {
+    const modJar = settings.cosmetics.length ? cosmeticsModFor(version.id) : null;
+    if (modJar) {
       send('game:state', { state: 'preparing', text: '치장품 모드 준비 중…' });
-      custom = await prepareCosmetics(settings);
+      custom = await prepareCosmetics(settings, version.id, modJar);
+    } else {
+      removeCosmeticsMod(settings);
     }
 
     // 잘리거나 손상된 게임 파일을 찾아 지우면, 아래 실행 단계에서 다시 받습니다.

@@ -124,7 +124,8 @@ $('wardrobe-login').onclick = login;
 
 // ───────── 버전 선택 메뉴 ─────────
 const versionType = (id) => (state.versions.find((v) => v.id === id) || {}).type;
-const blockFor = (id) => Pixel.blockIcon(versionType(id) === 'snapshot' ? 'stone' : id === state.cosmeticsVersion ? 'log' : 'grass');
+const blockFor = (id) => Pixel.blockIcon(versionType(id) === 'snapshot' ? 'stone' : 'grass');
+const cosSupported = (id) => (state.cosSupported || []).includes(id);
 
 function selectVersion(id) {
   if (state.busy || !state.versions.some((v) => v.id === id)) return;
@@ -144,7 +145,7 @@ function renderVersion() {
   const sub = [];
   if (hist[id]) sub.push(`마지막 플레이 ${ago(hist[id])}`);
   else if (!state.installed.includes(id)) sub.push('처음 실행 시 내려받음');
-  if (id === state.cosmeticsVersion && state.settings.cosmetics.length) sub.push('치장품 켜짐');
+  if (cosSupported(id) && state.settings.cosmetics.length) sub.push(`치장품 ${state.settings.cosmetics.length}개`);
   if (!state.busy) $('play-sub').textContent = sub.join(' · ') || `Minecraft ${id}`;
 }
 
@@ -355,78 +356,18 @@ function renderHomeChar() {
   applyCosmetics(homeViewer);
 }
 
-// 게임 안 모드(aurora-cosmetics)가 그리는 모양과 같은 치수의 상자들로 미리보기를 만듭니다.
-const COSMETICS = [
-  { id: 'tophat', name: '실크햇', slot: '머리' },
-  { id: 'crown', name: '왕관', slot: '머리' },
-  { id: 'halo', name: '후광', slot: '머리 위' },
-  { id: 'wings', name: '날개', slot: '등' },
-];
-
+// 치장품 3D 미리보기 (cosmetics3d.js, 게임 모드와 같은 모델 파일 사용)
 function applyCosmetics(v) {
-  if (!v) return;
-  const skin = v.playerObject.skin;
-  if (v._cos) v._cos.forEach((g) => g.parent && g.parent.remove(g));
-  v._cos = [];
-  const on = new Set((state.settings && state.settings.cosmetics) || []);
-  if (!on.size) return;
-
-  // skinview3d 가 쓰는 three.js 클래스를 기존 객체에서 얻어 옵니다.
-  let sample = null;
-  v.playerObject.traverse((o) => {
-    if (!sample && o.isMesh) sample = o;
-  });
-  const Mesh = sample.constructor;
-  const Box = sample.geometry.constructor;
-  const Mat = sample.material.constructor;
-  const Group = Object.getPrototypeOf(Object.getPrototypeOf(skin.head)).constructor;
-  const box = (parent, w, h, d, x, y, z, color, glow) => {
-    const m = new Mesh(new Box(w, h, d), new Mat(glow ? { color, emissive: color } : { color }));
-    m.position.set(x, y, z);
-    parent.add(m);
-    return m;
-  };
-  const group = (parent) => {
-    const g = new Group();
-    parent.add(g);
-    return g;
-  };
-
-  const head = group(skin.head);
-  v._cos.push(head);
-  let top = 8;
-  if (on.has('tophat')) {
-    box(head, 11, 1, 11, 0, 8.5, 0, 0x1b1b24);
-    box(head, 8.4, 1.5, 8.4, 0, 9.75, 0, 0xd63b4e);
-    box(head, 8, 5.5, 8, 0, 13.25, 0, 0x1b1b24);
-    top = 16;
-  } else if (on.has('crown')) {
-    box(head, 9, 2, 9, 0, 9, 0, 0xf7c948);
-    for (const [x, z] of [[3.5, 3.5], [-3.5, 3.5], [3.5, -3.5], [-3.5, -3.5]]) box(head, 2, 2.5, 2, x, 11.25, z, 0xf7c948);
-    box(head, 1.5, 1.5, 0.5, 0, 8.95, 4.65, 0x3df5c1, true);
-    top = 12.5;
-  }
-  if (on.has('halo')) {
-    const halo = group(head);
-    halo.position.y = top + 3.5;
-    for (let i = 0; i < 4; i++) {
-      const bar = box(halo, 8, 1, 1, 0, 0, 0, 0xfff2a8, true);
-      bar.rotation.y = (i * Math.PI) / 2;
-      bar.position.set(Math.sin((i * Math.PI) / 2) * 4, 0, Math.cos((i * Math.PI) / 2) * 4);
-    }
-  }
-  if (on.has('wings')) {
-    for (const side of [1, -1]) {
-      const wing = group(skin.body);
-      v._cos.push(wing);
-      wing.position.set(side, 5, -2.5);
-      wing.rotation.set(0, side * 0.45, side * 0.21);
-      box(wing, 7, 10, 1, side * 3.5, -5, 0, 0xf4f7ff);
-      box(wing, 6, 12, 1, side * 10, -7, 0, 0xf4f7ff);
-      box(wing, 4, 11, 1, side * 15, -9.5, 0, 0xafc8ff);
-    }
-  }
+  Cosmetics3D.apply(v, (state.settings && state.settings.cosmetics) || []);
 }
+// 캐릭터 동작에 맞춰 치장품도 움직임 (날개 펄럭임, 꼬리 흔들림 등)
+const MOVE = { idle: 0, walk: 0.5, run: 1, fly: 0.3 };
+function cosmeticsLoop() {
+  requestAnimationFrame(cosmeticsLoop);
+  if (viewer) Cosmetics3D.tick(viewer, MOVE[currentAnim] || 0, currentAnim === 'fly' ? 1 : 0);
+  if (homeViewer) Cosmetics3D.tick(homeViewer, state.busy ? 1 : 0, 0);
+}
+requestAnimationFrame(cosmeticsLoop);
 
 // ───────── 옷장 ─────────
 function ensureViewer() {
@@ -472,30 +413,24 @@ document.querySelectorAll('#tabs button').forEach(
 
 const stagger = (nodes) => nodes.forEach((n, i) => (n.style.animationDelay = `${i * 45}ms`));
 
+const SLOT_NAMES = { hat: '모자', ears: '머리', halo: '머리 위', back: '등', tail: '꼬리' };
 function renderCosmetics() {
-  const on = new Set(state.settings.cosmetics || []);
-  const ver = state.cosmeticsVersion;
-  $('cos-notice').hidden = state.version === ver;
-  $('cos-notice-title').textContent = `치장품은 ${ver} 에서만 적용됩니다. 현재 선택: ${state.version}`;
-  $('cos-select').textContent = `${ver} 선택`;
-  $('cnt-cos').textContent = on.size ? `${on.size}` : '';
-  const tiles = COSMETICS.map((c) => {
-    const b = el('button', 'item' + (on.has(c.id) ? ' on' : ''));
+  const on = state.settings.cosmetics || [];
+  const ok = cosSupported(state.version);
+  $('cos-notice').hidden = ok;
+  $('cos-notice-title').textContent = `${state.version} 은(는) 치장품을 지원하지 않습니다. 1.20 이상 정식 버전과 26.x 에서 보입니다.`;
+  $('cos-select').textContent = `${state.latest.release} 선택`;
+  $('cnt-cos').textContent = on.length ? `${on.length}` : '';
+  const tiles = Cosmetics3D.items().map((c) => {
+    const b = el('button', 'item' + (on.includes(c.id) ? ' on' : ''));
     const tile = el('div', 'tile');
-    const img = el('img');
-    img.src = Pixel.itemIcon(c.id);
+    const img = el('img', 'thumb3d');
+    img.src = `cosmetics/thumbs/${c.id}.png`;
     img.alt = '';
     tile.append(img);
-    b.append(tile, el('div', 'item-name', c.name), el('div', 'item-sub', c.slot));
+    b.append(tile, el('div', 'item-name', c.name), el('div', 'item-sub', SLOT_NAMES[c.slot] || c.slot));
     b.onclick = async () => {
-      const next = new Set(on);
-      if (next.has(c.id)) next.delete(c.id);
-      else {
-        next.add(c.id);
-        if (c.id === 'tophat') next.delete('crown');
-        if (c.id === 'crown') next.delete('tophat');
-      }
-      await patchSettings({ cosmetics: [...next] });
+      await patchSettings({ cosmetics: Cosmetics3D.toggle(on, c.id) });
       applyCosmetics(viewer);
       applyCosmetics(homeViewer);
       renderCosmetics();
@@ -507,7 +442,7 @@ function renderCosmetics() {
   $('cosmetics').replaceChildren(...tiles);
 }
 $('cos-select').onclick = () => {
-  selectVersion(state.cosmeticsVersion);
+  selectVersion(state.latest.release);
   renderCosmetics();
 };
 
@@ -801,7 +736,7 @@ $('news-next').onclick = () => $('news-row').scrollBy({ left: 250 });
   const started = Date.now();
 
   state.settings = await api.getSettings();
-  state.cosmeticsVersion = (await api.cosmeticsInfo()).version;
+  await Cosmetics3D.load().catch(() => {});
   state.appVersion = await api.appVersion();
   $('update-text').textContent = `v${state.appVersion}`;
   renderSettings();
@@ -811,6 +746,7 @@ $('news-next').onclick = () => $('news-row').scrollBy({ left: 250 });
 
   const [list, profile] = await Promise.all([guard(() => api.listVersions()), api.restore().catch(() => null)]);
   state.installed = await api.listInstalled().catch(() => []);
+  state.cosSupported = (await api.cosmeticsInfo().catch(() => ({ supported: [] }))).supported;
   if (list) {
     state.versions = list.versions;
     state.latest = list.latest;

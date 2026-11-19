@@ -1,5 +1,5 @@
 node_modules
 dist/
-cosmetics-mod/build/
-cosmetics-mod/.gradle/
+cosmetics-mod/**/build/
+cosmetics-mod/**/.gradle/
 *.log
