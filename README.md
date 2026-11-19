@@ -26,6 +26,10 @@ npm run dist       # Windows 설치 파일 빌드
 
 ### 치장품
 
+| 1.21.4 | 1.21.11 | 1.20.1 |
+| --- | --- | --- |
+| ![](docs/ingame-1.21.4.png) | ![](docs/ingame-1.21.11.png) | ![](docs/ingame-1.20.1.png) |
+
 치장품(모양, 텍스처, 애니메이션)은 `cosmetics-mod/tools/gen_cosmetics.py` 한 곳에서 정의합니다.
 이 스크립트가 게임 모드용 `cosmetics.json` + 텍스처와 런처 미리보기용 `src/renderer/cosmetics/cosmetics.data.js` 를 함께 만듭니다.
 

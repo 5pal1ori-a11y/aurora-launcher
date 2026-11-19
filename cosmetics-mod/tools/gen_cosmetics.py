@@ -298,7 +298,7 @@ def items():
     for i in range(n):
         a = 2 * math.pi * i / n
         segs.append(part([cube((-1.35, -0.35, -4.3), (2.7, 0.7, 0.7), halo_mat)], rot=(0, a, 0)))
-    halo = {'pivot': [0, -13, 0], 'rot': [0, 0, 0], 'glow': True,
+    halo = {'pivot': [0, -17, 0], 'rot': [0, 0, 0], 'glow': True,
             'anims': [{'type': 'spin', 'speed': 0.03}, {'type': 'bob', 'amp': 0.5, 'speed': 0.08}], 'children': segs, 'cubes': []}
     out.append({'id': 'halo', 'name': '후광', 'slot': 'halo', 'bone': 'head', 'parts': [halo]})
 
